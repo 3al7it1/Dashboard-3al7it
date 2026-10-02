@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220" width="400" height="220">
+  <!-- Border rectangle frame with gap at bottom center for subtitle -->
+  <path d="M 50,40 L 350,40 L 350,170 L 260,170 M 140,170 L 50,170 L 50,40 Z" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter" />
+  
+  <!-- Main Logo Heading: 3AL 7IT -->
+  <text x="200" y="120" font-family="'Plus Jakarta Sans', 'Outfit', 'Segoe UI', sans-serif" font-weight="900" font-size="54" fill="#FFFFFF" text-anchor="middle" letter-spacing="4">3AL 7IT</text>
+  
+  <!-- Subtitle in border gap: GALERIE D'ART -->
+  <text x="200" y="176" font-family="'Plus Jakarta Sans', 'Outfit', 'Segoe UI', sans-serif" font-weight="700" font-size="15" fill="#FFFFFF" text-anchor="middle" letter-spacing="3">GALERIE D'ART</text>
+</svg>
