@@ -20,6 +20,7 @@ import {
   Package
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getCanonicalSport, matchesTab } from "../lib/sportsDictionary";
 
 const DEFAULT_FORM_STATE = {
   title: "",
@@ -27,6 +28,7 @@ const DEFAULT_FORM_STATE = {
   category: "Cadre",
   subcategory: "Sports",
   nestedSport: "Football",
+  discipline: "Football",
   status: "Active",
   basePrice: 65,
   pricingMatrix: { A4: 45, A3: 65, A2: 95, A1: 145, A0: 220 },
@@ -347,7 +349,8 @@ export const ProductsTab = ({ globalSearchQuery, isOpenModal, setIsOpenModal }) 
       description: product.description || "",
       category: product.category || "Cadre",
       subcategory: product.subcategory || "Sports",
-      nestedSport: product.nestedSport || "Football",
+      nestedSport: product.discipline || product.nestedSport || "Football",
+      discipline: getCanonicalSport(product.discipline || product.nestedSport || "Football"),
       status: product.status || "Active",
       basePrice: product.basePrice || 65,
       pricingMatrix: product.pricingMatrix || { A4: 45, A3: 65, A2: 95, A1: 145, A0: 220 },
@@ -374,10 +377,26 @@ export const ProductsTab = ({ globalSearchQuery, isOpenModal, setIsOpenModal }) 
 
     setIsSaving(true);
     try {
+      const isSports = formData.subcategory === "Sports" || formData.category === "Sports" || !!formData.nestedSport || !!formData.discipline;
+      let finalCategory = formData.category || "Cadre";
+      let finalSubcategory = formData.subcategory;
+      let finalDiscipline = formData.discipline || formData.nestedSport || null;
+
+      if (isSports && (formData.nestedSport || formData.discipline || formData.subcategory === "Sports")) {
+        const canonicalVal = getCanonicalSport(formData.discipline || formData.nestedSport || "Football");
+        finalCategory = formData.category || "Sports";
+        finalSubcategory = canonicalVal;
+        finalDiscipline = canonicalVal;
+      }
+
       const payload = {
         ...formData,
         title,
         description: formData.description.trim(),
+        category: finalCategory,
+        subcategory: finalSubcategory,
+        discipline: finalDiscipline,
+        nestedSport: finalDiscipline,
         basePrice: Number(formData.pricingMatrix?.A3 || formData.basePrice || 65),
         stock: Number(formData.stock) || 0,
         status: formData.status || "Active",
@@ -405,7 +424,7 @@ export const ProductsTab = ({ globalSearchQuery, isOpenModal, setIsOpenModal }) 
   }, []);
 
   const filteredProducts = products.filter((p) => {
-    const matchesCat = categoryFilter === "All" || p.category === categoryFilter;
+    const matchesCat = categoryFilter === "All" || p.category === categoryFilter || matchesTab(p, categoryFilter);
     const matchesSearch =
       !activeSearch ||
       (p.title && p.title.toLowerCase().includes(activeSearch.toLowerCase())) ||
@@ -783,8 +802,8 @@ export const ProductsTab = ({ globalSearchQuery, isOpenModal, setIsOpenModal }) 
                           <option value="Football">⚽ Football</option>
                           <option value="Basketball">🏀 Basketball</option>
                           <option value="MMA">🥊 MMA</option>
-                          <option value="Boxing">🥊 Boxing</option>
-                          <option value="Motorsport">🏎️ Motorsport (F1)</option>
+                          <option value="Boxe">🥊 Boxe</option>
+                          <option value="Sports Auto">🏎️ Sports Auto (F1)</option>
                           <option value="Tennis">🎾 Tennis</option>
                         </select>
                       </div>

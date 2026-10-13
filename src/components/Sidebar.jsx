@@ -8,6 +8,7 @@ import {
   LayoutTemplate, 
   PlusCircle, 
   Coins,
+  Wallet,
   Sparkles,
   ShieldCheck
 } from "lucide-react";
@@ -58,6 +59,14 @@ export const Sidebar = ({ onOpenAddProductModal }) => {
       icon: LayoutTemplate,
       badge: "PROMO",
       badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30"
+    },
+    {
+      id: "vendor",
+      labelFr: "Fournisseurs & Profit",
+      labelEn: "Vendors & Net Profit",
+      icon: Wallet,
+      badge: "PRO",
+      badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
     }
   ];
 

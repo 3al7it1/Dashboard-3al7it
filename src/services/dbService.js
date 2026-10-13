@@ -4,7 +4,9 @@ import {
   INITIAL_ORDERS,
   CATEGORIES_TREE,
   INITIAL_AD_SPEND,
-  INITIAL_CMS_CONFIG
+  INITIAL_CMS_CONFIG,
+  INITIAL_VENDOR_PAYMENTS,
+  INITIAL_OPERATIONAL_EXPENSES
 } from "../data/mockData";
 
 // Helper for LocalStorage fallback
@@ -85,7 +87,8 @@ export const createProductDB = async (productData) => {
           description: productData.description,
           category: productData.category,
           subcategory: productData.subcategory,
-          nested_sport: productData.nestedSport,
+          discipline: productData.discipline || productData.nestedSport || null,
+            nested_sport: productData.discipline || productData.nestedSport || null,
           images: productData.images,
           video_url: productData.videoUrl,
           pixel_dimensions: "1200x1600px",
@@ -117,7 +120,10 @@ export const updateProductDB = async (id, updatedFields) => {
       if (updatedFields.description !== undefined) dbPayload.description = updatedFields.description;
       if (updatedFields.category !== undefined) dbPayload.category = updatedFields.category;
       if (updatedFields.subcategory !== undefined) dbPayload.subcategory = updatedFields.subcategory;
-      if (updatedFields.nestedSport !== undefined) dbPayload.nested_sport = updatedFields.nestedSport;
+      if (updatedFields.discipline !== undefined || updatedFields.nestedSport !== undefined) {
+          dbPayload.discipline = updatedFields.discipline || updatedFields.nestedSport;
+          dbPayload.nested_sport = updatedFields.discipline || updatedFields.nestedSport;
+        }
       if (updatedFields.images !== undefined) dbPayload.images = updatedFields.images;
       if (updatedFields.videoUrl !== undefined) dbPayload.video_url = updatedFields.videoUrl;
       if (updatedFields.pricingMatrix !== undefined) dbPayload.pricing_matrix = updatedFields.pricingMatrix;
@@ -164,24 +170,32 @@ export const getOrders = async () => {
         .order("created_at", { ascending: false });
 
       if (!error && data && data.length > 0) {
-        const mapped = data.map((o) => ({
-          id: o.id,
-          customerName: o.customer_name,
-          phone: o.phone,
-          address: o.address,
-          governorate: o.governorate,
-          postalCode: o.postal_code,
-          status: o.status,
-          paymentMethod: o.payment_method,
-          isPaid: o.is_paid,
-          shippingFee: o.shipping_fee,
-          items: o.items || [],
-          totalAmount: o.total_amount,
-          totalPanels: o.total_panels,
-          customAssetUrl: o.custom_asset_url,
-          notes: o.notes,
-          createdAt: o.created_at
-        }));
+        const mapped = data.map((o) => {
+          const resolvedImg = o.custom_asset_url || o.custom_image || o.custom_image_url || o.image_url || 
+            (Array.isArray(o.items) && (o.items.find(i => i.custom_image_url || i.custom_image || i.assetUrl)?.custom_image_url || o.items.find(i => i.custom_image_url || i.custom_image || i.assetUrl)?.custom_image || o.items[0]?.image)) || null;
+
+          return {
+            id: o.id,
+            customerName: o.customer_name || o.full_name || "Client",
+            phone: o.phone || o.customer_phone || "",
+            address: o.address || o.customer_address || "",
+            governorate: o.governorate || o.gouvernorate || "Tunis",
+            postalCode: o.postal_code || "",
+            status: o.status || "Pending",
+            paymentMethod: o.payment_method || "Cash on Delivery",
+            isPaid: Boolean(o.is_paid),
+            shippingFee: Number(o.shipping_fee) || 7,
+            items: o.items || [],
+            totalAmount: Number(o.total_amount) || 0,
+            totalPanels: o.total_panels || (Array.isArray(o.items) ? o.items.reduce((s, i) => s + (i.quantity || 1), 0) : 1),
+            customAssetUrl: resolvedImg,
+            custom_image: resolvedImg,
+            custom_image_url: resolvedImg,
+            image_url: resolvedImg,
+            notes: o.notes || "",
+            createdAt: o.created_at || new Date().toISOString()
+          };
+        });
         setLS("td_admin_orders", mapped);
         return mapped;
       }
@@ -475,4 +489,104 @@ export const seedInitialDatabase = async () => {
       console.warn("Supabase seedInitialDatabase error:", e);
     }
   }
+};
+
+// ----------------------------------------------------------------------
+// VENDOR PAYMENTS SERVICE (LOTFI & L'IMPRIMERIE)
+// ----------------------------------------------------------------------
+export const getVendorPayments = async () => {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from("vendor_payments")
+        .select("*")
+        .order("date", { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        setLS("td_admin_vendor_payments", data);
+        return data;
+      }
+    } catch (e) {
+      // Supabase table may not exist yet, fallback gracefully to LocalStorage
+    }
+  }
+
+  return getLS("td_admin_vendor_payments", INITIAL_VENDOR_PAYMENTS);
+};
+
+export const saveVendorPaymentsDB = async (paymentsList) => {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from("vendor_payments").upsert(paymentsList);
+    } catch (e) {}
+  }
+  setLS("td_admin_vendor_payments", paymentsList);
+};
+
+export const addVendorPaymentDB = async (payment) => {
+  const existing = getLS("td_admin_vendor_payments", INITIAL_VENDOR_PAYMENTS);
+  const updated = [payment, ...existing];
+  await saveVendorPaymentsDB(updated);
+  return updated;
+};
+
+export const deleteVendorPaymentDB = async (paymentId) => {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from("vendor_payments").delete().eq("id", paymentId);
+    } catch (e) {}
+  }
+  const existing = getLS("td_admin_vendor_payments", INITIAL_VENDOR_PAYMENTS);
+  const updated = existing.filter((p) => p.id !== paymentId);
+  setLS("td_admin_vendor_payments", updated);
+  return updated;
+};
+
+// ----------------------------------------------------------------------
+// OPERATIONAL EXPENSES SERVICE
+// ----------------------------------------------------------------------
+export const getOperationalExpenses = async () => {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from("operational_expenses")
+        .select("*")
+        .order("date", { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        setLS("td_admin_expenses", data);
+        return data;
+      }
+    } catch (e) {}
+  }
+
+  return getLS("td_admin_expenses", INITIAL_OPERATIONAL_EXPENSES);
+};
+
+export const saveOperationalExpensesDB = async (expensesList) => {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from("operational_expenses").upsert(expensesList);
+    } catch (e) {}
+  }
+  setLS("td_admin_expenses", expensesList);
+};
+
+export const addOperationalExpenseDB = async (expense) => {
+  const existing = getLS("td_admin_expenses", INITIAL_OPERATIONAL_EXPENSES);
+  const updated = [expense, ...existing];
+  await saveOperationalExpensesDB(updated);
+  return updated;
+};
+
+export const deleteOperationalExpenseDB = async (expenseId) => {
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from("operational_expenses").delete().eq("id", expenseId);
+    } catch (e) {}
+  }
+  const existing = getLS("td_admin_expenses", INITIAL_OPERATIONAL_EXPENSES);
+  const updated = existing.filter((e) => e.id !== expenseId);
+  setLS("td_admin_expenses", updated);
+  return updated;
 };

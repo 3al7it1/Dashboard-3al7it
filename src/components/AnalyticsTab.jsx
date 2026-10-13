@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { calculateNetProfitBreakdown } from "../lib/vendorAccounting";
 import { useApp } from "../context/AppContext";
 import { REVENUE_TIMESERIES_DATA } from "../data/mockData";
 import { 
@@ -33,7 +34,7 @@ import {
 } from "recharts";
 
 export const AnalyticsTab = () => {
-  const { lang, orders, adSpend, updateAdSpend } = useApp();
+  const { lang, orders, adSpend, updateAdSpend, vendorPayments, operationalExpenses } = useApp();
   const [timeframe, setTimeframe] = useState("Semaine");
 
   // Local draft ad spend form state
@@ -132,6 +133,15 @@ export const AnalyticsTab = () => {
       formatBarData: barData
     };
   }, [orders, adSpend]);
+
+  // Vendor-accurate net profit (uses real Lotfi + Imprimerie costs)
+  const vendorProfitData = useMemo(() => {
+    return calculateNetProfitBreakdown({ orders, adSpend, expenses: operationalExpenses || [] });
+  }, [orders, adSpend, operationalExpenses]);
+
+  const vendorNetProfit = vendorProfitData.netProfit;
+  const vendorNetMargin = vendorProfitData.netMargin;
+  const vendorTotalCosts = vendorProfitData.totalVendorCosts;
 
   const PIE_COLORS = ["#F59E0B", "#06B6D4", "#A855F7", "#10B981"];
 
@@ -260,10 +270,13 @@ export const AnalyticsTab = () => {
             </div>
           </div>
           <p className="text-xl font-black text-white tracking-tight font-['Outfit',sans-serif]">
-            {netProfitMargin.toFixed(1)}%
+            {vendorNetMargin.toFixed(1)}%
           </p>
-          <div className="mt-2 flex items-center gap-1 text-[10px] text-cyan-400">
-            <span>{netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })} DNT Profit</span>
+          <div className="mt-2 space-y-0.5">
+            <div className="flex items-center gap-1 text-[10px] text-cyan-400">
+              <span className="font-bold">{vendorNetProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })} DNT</span>
+              <span className="text-slate-500">(Fournisseurs Réels)</span>
+            </div>
           </div>
         </div>
 

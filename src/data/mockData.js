@@ -862,3 +862,56 @@ export const INITIAL_CMS_CONFIG = {
   announcementText: "✨ Livraison offerte sur toute la Tunisie à partir de 150 DNT d'achat! 🇹🇳",
   announcementActive: true
 };
+
+
+// ======================================================================
+// VENDOR PAYMENT LEDGER & OPERATIONAL EXPENSES INITIAL / DEMO DATA
+// ======================================================================
+
+export const INITIAL_VENDOR_PAYMENTS = [
+  {
+    id: "PAY-LOTFI-001",
+    vendor: "Lotfi",
+    vendorRole: "Menuiserie, Châssis MDF & Cadres",
+    amount: 150.0,
+    date: "2026-10-05",
+    paymentMethod: "Espèces",
+    notes: "Acompte chantiers semaine 40"
+  },
+  {
+    id: "PAY-IMP-001",
+    vendor: "L'Imprimerie",
+    vendorRole: "Tirages Vinyle & Plastification",
+    amount: 60.0,
+    date: "2026-10-06",
+    paymentMethod: "Virement Bancaire",
+    notes: "Règlement lot vinyle A3/A2"
+  }
+];
+
+export const INITIAL_OPERATIONAL_EXPENSES = [
+  {
+    id: "EXP-001",
+    title: "Achat rouleaux papier bulle & ruban adhésif renforcé",
+    category: "Packaging & Emballage",
+    amount: 45.0,
+    date: "2026-10-02",
+    notes: "Fournitures d'emballage pour 50 colis"
+  },
+  {
+    id: "EXP-002",
+    title: "Carburant livraison express Tunis & Grand Tunis",
+    category: "Transport & Logistique",
+    amount: 35.0,
+    date: "2026-10-04",
+    notes: "Tournée livraison urgente"
+  },
+  {
+    id: "EXP-003",
+    title: "Abonnement suite créative & retouche HD (Canva Pro)",
+    category: "Outils & Abonnements",
+    amount: 30.0,
+    date: "2026-10-01",
+    notes: "Licence mensuelle"
+  }
+];

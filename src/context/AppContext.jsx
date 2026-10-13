@@ -13,7 +13,14 @@ import {
   saveAdSpendDB,
   getCmsConfig,
   saveCmsConfigDB,
-  seedInitialDatabase
+  seedInitialDatabase,
+  getVendorPayments,
+  saveVendorPaymentsDB,
+  addVendorPaymentDB,
+  deleteVendorPaymentDB,
+  getOperationalExpenses,
+  addOperationalExpenseDB,
+  deleteOperationalExpenseDB
 } from "../services/dbService";
 import { isSupabaseConfigured } from "../lib/supabase";
 import {
@@ -23,7 +30,9 @@ import {
   INITIAL_AD_SPEND,
   INITIAL_CMS_CONFIG,
   SAMPLE_DEMO_PRODUCTS,
-  SAMPLE_DEMO_ORDERS
+  SAMPLE_DEMO_ORDERS,
+  INITIAL_VENDOR_PAYMENTS,
+  INITIAL_OPERATIONAL_EXPENSES
 } from "../data/mockData";
 
 const AppContext = createContext();
@@ -52,6 +61,8 @@ export const AppProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
   const [adSpend, setAdSpend] = useState(INITIAL_AD_SPEND);
   const [cmsConfig, setCmsConfig] = useState(INITIAL_CMS_CONFIG);
+  const [vendorPayments, setVendorPayments] = useState(INITIAL_VENDOR_PAYMENTS);
+  const [operationalExpenses, setOperationalExpenses] = useState(INITIAL_OPERATIONAL_EXPENSES);
 
   // Smart Categorized Toast Notification System
   const [toasts, setToasts] = useState([]);
@@ -73,13 +84,15 @@ export const AppProvider = ({ children }) => {
     const initializeData = async () => {
       setIsLoading(true);
       try {
-        const [fetchedProducts, fetchedOrders, fetchedCategories, fetchedAdSpend, fetchedCms] =
+        const [fetchedProducts, fetchedOrders, fetchedCategories, fetchedAdSpend, fetchedCms, fetchedVendorPayments, fetchedExpenses] =
           await Promise.all([
             getProducts(),
             getOrders(),
             getCategories(),
             getAdSpend(),
-            getCmsConfig()
+            getCmsConfig(),
+            getVendorPayments(),
+            getOperationalExpenses()
           ]);
 
         // If empty on first load, seed data automatically
@@ -90,12 +103,16 @@ export const AppProvider = ({ children }) => {
           setCategories(CATEGORIES_TREE);
           setAdSpend(INITIAL_AD_SPEND);
           setCmsConfig(INITIAL_CMS_CONFIG);
+          setVendorPayments(INITIAL_VENDOR_PAYMENTS);
+          setOperationalExpenses(INITIAL_OPERATIONAL_EXPENSES);
         } else {
           setProducts(fetchedProducts);
           setOrders(fetchedOrders);
           setCategories(fetchedCategories);
           setAdSpend(fetchedAdSpend);
           setCmsConfig(fetchedCms);
+          setVendorPayments(fetchedVendorPayments || INITIAL_VENDOR_PAYMENTS);
+          setOperationalExpenses(fetchedExpenses || INITIAL_OPERATIONAL_EXPENSES);
         }
       } catch (err) {
         console.warn("Data initialization error:", err);
@@ -238,6 +255,63 @@ export const AppProvider = ({ children }) => {
     addToast(spendMsg, "adspend", "success");
   };
 
+
+  // ─── VENDOR PAYMENT ACTIONS ─────────────────────────────────────────
+  const addVendorPayment = async (paymentData) => {
+    const newPayment = {
+      ...paymentData,
+      id: paymentData.id || `PAY-${Date.now()}`
+    };
+    const updated = await addVendorPaymentDB(newPayment);
+    setVendorPayments(updated);
+    addToast(
+      lang === "fr"
+        ? `Paiement de ${paymentData.amount} DNT enregistré pour ${paymentData.vendor}`
+        : `Payment of ${paymentData.amount} DNT recorded for ${paymentData.vendor}`,
+      "system",
+      "success"
+    );
+    return newPayment;
+  };
+
+  const deleteVendorPayment = async (paymentId) => {
+    const updated = await deleteVendorPaymentDB(paymentId);
+    setVendorPayments(updated);
+    addToast(
+      lang === "fr" ? "Paiement fournisseur supprimé." : "Vendor payment deleted.",
+      "system",
+      "warning"
+    );
+  };
+
+  // ─── OPERATIONAL EXPENSE ACTIONS ────────────────────────────────────
+  const addExpense = async (expenseData) => {
+    const newExpense = {
+      ...expenseData,
+      id: expenseData.id || `EXP-${Date.now()}`
+    };
+    const updated = await addOperationalExpenseDB(newExpense);
+    setOperationalExpenses(updated);
+    addToast(
+      lang === "fr"
+        ? `Dépense de ${expenseData.amount} DNT enregistrée.`
+        : `Expense of ${expenseData.amount} DNT recorded.`,
+      "system",
+      "success"
+    );
+    return newExpense;
+  };
+
+  const deleteExpense = async (expenseId) => {
+    const updated = await deleteOperationalExpenseDB(expenseId);
+    setOperationalExpenses(updated);
+    addToast(
+      lang === "fr" ? "Dépense supprimée." : "Expense deleted.",
+      "system",
+      "warning"
+    );
+  };
+
   // CMS ACTIONS
   const updateCmsConfig = async (fields) => {
     const updated = { ...cmsConfig, ...fields };
@@ -314,6 +388,14 @@ export const AppProvider = ({ children }) => {
         reorderCategories,
         updateAdSpend,
         updateCmsConfig,
+        vendorPayments,
+        setVendorPayments,
+        addVendorPayment,
+        deleteVendorPayment,
+        operationalExpenses,
+        setOperationalExpenses,
+        addExpense,
+        deleteExpense,
         resetDemoData,
         purgeDataCleanSlate
       }}

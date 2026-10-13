@@ -8,6 +8,7 @@ import { OrdersTab } from "./components/OrdersTab";
 import { ProductsTab } from "./components/ProductsTab";
 import { CategoriesTab } from "./components/CategoriesTab";
 import { CmsTab } from "./components/CmsTab";
+import { VendorLedgerTab } from "./components/VendorLedgerTab";
 import { AdminSettingsModal } from "./components/AdminSettingsModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
@@ -106,6 +107,7 @@ const MainLayout = () => {
                 )}
                 {activeTab === "categories" && <CategoriesTab />}
                 {activeTab === "cms" && <CmsTab />}
+                {activeTab === "vendor" && <VendorLedgerTab />}
               </motion.div>
             </AnimatePresence>
           </div>
