@@ -216,22 +216,36 @@ export const CategoriesTab = () => {
                 </div>
               </div>
 
-              {/* Subcategories Pills Grid */}
+              {/* Subcategories & Nested Sports Display */}
               <div className="space-y-2">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                  Sous-Catégories associées :
+                  Sous-Catégories & Taxonomie Imbriquée :
                 </span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2.5">
                   {cat.subcategories && cat.subcategories.map((sub) => (
                     <div
                       key={sub.id}
-                      className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs font-semibold flex items-center gap-2 shadow-sm"
+                      className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs font-semibold space-y-2 shadow-sm"
                     >
-                      <Tag className="w-3 h-3 text-cyan-400" />
-                      <span>{sub.name}</span>
-                      {sub.nestedSports && (
-                        <div className="flex items-center gap-1 text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-                          <span>⚽🏀 Sports Imbriqués</span>
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-3 h-3 text-cyan-400" />
+                        <span className="font-bold text-white">{sub.name}</span>
+                        {sub.nestedSports && (
+                          <span className="text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded font-mono border border-amber-500/20">
+                            {sub.nestedSports.length} disciplines
+                          </span>
+                        )}
+                      </div>
+                      {sub.nestedSports && sub.nestedSports.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-1.5 border-t border-slate-800/80">
+                          {sub.nestedSports.map((sp) => (
+                            <span
+                              key={sp}
+                              className="text-[10px] text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md font-mono border border-amber-500/25"
+                            >
+                              {sp}
+                            </span>
+                          ))}
                         </div>
                       )}
                     </div>

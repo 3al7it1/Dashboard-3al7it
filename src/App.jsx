@@ -23,11 +23,16 @@ const LoadingScreen = () => (
       className="flex flex-col items-center gap-4"
     >
       <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-2xl shadow-amber-500/20 border border-slate-700">
-        <img src="/assets/logo.png" alt="Logo" className="h-12 w-auto object-contain" />
+        <img
+          src="/logo.png"
+          alt="Tableaux Décoratifs Logo"
+          className="h-12 w-auto object-contain"
+          onError={(e) => { e.target.src = "/assets/logo.png"; }}
+        />
       </div>
       <div className="text-center space-y-1">
         <h1 className="text-xl font-black text-white font-['Outfit',sans-serif] tracking-tight">
-          3AL 7IT
+          Tableaux Décoratifs
         </h1>
         <p className="text-xs text-slate-400">Chargement du Backoffice Admin...</p>
       </div>

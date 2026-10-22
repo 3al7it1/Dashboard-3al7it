@@ -35,25 +35,25 @@ export const Navbar = ({ globalSearchQuery, setGlobalSearchQuery, onOpenAddProdu
           <div className="flex items-center gap-3 group cursor-pointer">
             <div className="h-10 px-2 py-1 bg-white rounded-xl border border-slate-700 flex items-center justify-center shadow-lg group-hover:border-amber-500/50 transition-all shrink-0 overflow-hidden">
               <img
-                src="/assets/logo.png"
-                alt="3AL 7IT Logo"
+                src="/logo.png"
+                alt="Tableaux Décoratifs Logo"
                 className="h-8 w-auto object-contain"
                 onError={(e) => {
-                  e.target.style.display = "none";
+                  e.target.src = "/assets/logo.png";
                 }}
               />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-lg lg:text-xl tracking-tight text-white font-['Outfit',sans-serif]">
-                  3AL 7IT
+                  Tableaux Décoratifs
                 </span>
                 <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-full tracking-wider uppercase">
                   /admin
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 hidden sm:block">
-                {lang === "fr" ? "Galerie d'Art & Backoffice Luxe" : "Art Gallery & Backoffice Portal"}
+                {lang === "fr" ? "Galerie d'Art & Backoffice Luxe (3AL 7IT)" : "Art Gallery & Executive Backoffice (3AL 7IT)"}
               </p>
             </div>
           </div>

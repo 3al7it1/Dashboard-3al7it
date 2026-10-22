@@ -77,10 +77,15 @@ export const Sidebar = ({ onOpenAddProductModal }) => {
         
         {/* Navigation Header Title with Logo */}
         <div className="px-3 pt-2 space-y-3">
-          <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-700">
-            <img src="/assets/logo.png" alt="3AL 7IT Logo" className="h-7 w-auto object-contain" />
-            <span className="text-[9px] font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
-              GALERIE D'ART
+          <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-700 shadow-sm">
+            <img
+              src="/logo.png"
+              alt="Tableaux Décoratifs"
+              className="h-7 w-auto object-contain"
+              onError={(e) => { e.target.src = "/assets/logo.png"; }}
+            />
+            <span className="text-[9px] font-extrabold text-slate-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+              TABLEAUX DÉCORATIFS
             </span>
           </div>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">

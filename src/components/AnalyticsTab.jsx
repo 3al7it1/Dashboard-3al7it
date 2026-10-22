@@ -82,20 +82,28 @@ export const AnalyticsTab = () => {
     const computedCac = ordersCount > 0 ? spend / ordersCount : 0;
 
     // Category Sales Share
-    const catMap = { Cadre: 0, Panneaux: 0, Packs: 0, Personnalisé: 0 };
+    const catMap = { "Nos Tableaux": 0, "Packs (Pack en 3)": 0, "Best Sellers": 0, "Personnalisé": 0 };
     valid.forEach((ord) => {
       if (ord.items) {
         ord.items.forEach((item) => {
-          const catKey = item.category || "Cadre";
-          catMap[catKey] = (catMap[catKey] || 0) + (item.subtotal || 0);
+          let catKey = item.category || "Nos Tableaux";
+          if (catKey === "Cadre" || catKey === "Panneaux") catKey = "Nos Tableaux";
+          if (catKey.includes("Pack")) catKey = "Packs (Pack en 3)";
+          catMap[catKey] = (catMap[catKey] || 0) + (item.subtotal || (item.unitPrice ? item.unitPrice * (item.quantity || 1) : 0));
         });
       }
     });
 
-    const pieData = Object.keys(catMap).map((catName) => ({
-      name: catName,
-      value: catMap[catName]
-    }));
+    const nonZeroPie = Object.keys(catMap)
+      .filter((k) => catMap[k] > 0)
+      .map((catName) => ({
+        name: catName,
+        value: catMap[catName]
+      }));
+
+    const pieData = nonZeroPie.length > 0
+      ? nonZeroPie
+      : Object.keys(catMap).map((catName) => ({ name: catName, value: 0 }));
 
     // Format Volume Distribution
     const fmtCounts = { A4: 0, A3: 0, A2: 0, A1: 0, A0: 0 };

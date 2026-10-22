@@ -47,13 +47,18 @@ export const getProducts = async () => {
           description: p.description,
           category: p.category,
           subcategory: p.subcategory,
-          nestedSport: p.nested_sport,
+          nestedSport: p.nested_sport || p.discipline,
+          discipline: p.discipline || p.nested_sport,
           images: p.images || [],
+          imagesCadre: p.images_cadre || p.imagesCadre || p.images || [],
+          imagesPanneau: p.images_panneau || p.imagesPanneau || [],
           videoUrl: p.video_url || "",
           pixelDimensions: p.pixel_dimensions || "1200x1600px",
-          pricingMatrix: p.pricing_matrix || { A4: 45, A3: 65, A2: 95, A1: 145, A0: 220 },
+          pricingMatrixCadre: p.pricing_matrix_cadre || p.pricingMatrixCadre || p.pricing_matrix || { A4: 50, A3: 75, A2: 110, A1: 165, A0: 240 },
+          pricingMatrixSimple: p.pricing_matrix_simple || p.pricingMatrixSimple || { A4: 35, A3: 55, A2: 85, A1: 130, A0: 190 },
+          pricingMatrix: p.pricing_matrix || p.pricingMatrixCadre || { A4: 50, A3: 75, A2: 110, A1: 165, A0: 240 },
           status: p.status || "Active",
-          basePrice: p.base_price || 65,
+          basePrice: p.base_price || 55,
           stock: p.stock ?? 20,
           salesCount: p.sales_count || 0
         }));
@@ -65,8 +70,23 @@ export const getProducts = async () => {
     }
   }
 
-  // LocalStorage Fallback
-  return getLS("td_admin_products", INITIAL_PRODUCTS);
+  // LocalStorage Fallback with auto-migration to ensure dual pricing & image arrays exist
+  const stored = getLS("td_admin_products", null);
+  if (!stored || stored.length === 0) {
+    setLS("td_admin_products", INITIAL_PRODUCTS);
+    return INITIAL_PRODUCTS;
+  }
+
+  // Ensure all existing items have dual pricing matrices and dual image slots
+  const enriched = stored.map((p) => ({
+    ...p,
+    pricingMatrixCadre: p.pricingMatrixCadre || p.pricingMatrix || { A4: 50, A3: 75, A2: 110, A1: 165, A0: 240 },
+    pricingMatrixSimple: p.pricingMatrixSimple || { A4: 35, A3: 55, A2: 85, A1: 130, A0: 190 },
+    imagesCadre: p.imagesCadre || p.images || [],
+    imagesPanneau: p.imagesPanneau || [],
+    images: p.images || (p.imagesCadre && p.imagesCadre.length > 0 ? p.imagesCadre : [])
+  }));
+  return enriched;
 };
 
 export const createProductDB = async (productData) => {
@@ -75,7 +95,15 @@ export const createProductDB = async (productData) => {
     ...productData,
     id: newId,
     salesCount: 0,
-    stock: productData.stock ?? 20
+    stock: productData.stock ?? 20,
+    pricingMatrixCadre: productData.pricingMatrixCadre || { A4: 50, A3: 75, A2: 110, A1: 165, A0: 240 },
+    pricingMatrixSimple: productData.pricingMatrixSimple || { A4: 35, A3: 55, A2: 85, A1: 130, A0: 190 },
+    pricingMatrix: productData.pricingMatrixCadre || productData.pricingMatrix || { A4: 50, A3: 75, A2: 110, A1: 165, A0: 240 },
+    imagesCadre: productData.imagesCadre || [],
+    imagesPanneau: productData.imagesPanneau || [],
+    images: (productData.images && productData.images.length > 0)
+      ? productData.images
+      : [...(productData.imagesCadre || []), ...(productData.imagesPanneau || [])]
   };
 
   if (isSupabaseConfigured()) {
@@ -88,13 +116,13 @@ export const createProductDB = async (productData) => {
           category: productData.category,
           subcategory: productData.subcategory,
           discipline: productData.discipline || productData.nestedSport || null,
-            nested_sport: productData.discipline || productData.nestedSport || null,
-          images: productData.images,
+          nested_sport: productData.discipline || productData.nestedSport || null,
+          images: productPayload.images,
           video_url: productData.videoUrl,
           pixel_dimensions: "1200x1600px",
-          pricing_matrix: productData.pricingMatrix,
+          pricing_matrix: productPayload.pricingMatrixCadre,
           status: productData.status || "Active",
-          base_price: productData.basePrice || 65,
+          base_price: productData.basePrice || 55,
           stock: productData.stock || 20,
           sales_count: 0
         }
@@ -121,12 +149,13 @@ export const updateProductDB = async (id, updatedFields) => {
       if (updatedFields.category !== undefined) dbPayload.category = updatedFields.category;
       if (updatedFields.subcategory !== undefined) dbPayload.subcategory = updatedFields.subcategory;
       if (updatedFields.discipline !== undefined || updatedFields.nestedSport !== undefined) {
-          dbPayload.discipline = updatedFields.discipline || updatedFields.nestedSport;
-          dbPayload.nested_sport = updatedFields.discipline || updatedFields.nestedSport;
-        }
+        dbPayload.discipline = updatedFields.discipline || updatedFields.nestedSport;
+        dbPayload.nested_sport = updatedFields.discipline || updatedFields.nestedSport;
+      }
       if (updatedFields.images !== undefined) dbPayload.images = updatedFields.images;
       if (updatedFields.videoUrl !== undefined) dbPayload.video_url = updatedFields.videoUrl;
-      if (updatedFields.pricingMatrix !== undefined) dbPayload.pricing_matrix = updatedFields.pricingMatrix;
+      if (updatedFields.pricingMatrixCadre !== undefined) dbPayload.pricing_matrix = updatedFields.pricingMatrixCadre;
+      else if (updatedFields.pricingMatrix !== undefined) dbPayload.pricing_matrix = updatedFields.pricingMatrix;
       if (updatedFields.status !== undefined) dbPayload.status = updatedFields.status;
       if (updatedFields.basePrice !== undefined) dbPayload.base_price = updatedFields.basePrice;
       if (updatedFields.stock !== undefined) dbPayload.stock = updatedFields.stock;
@@ -138,7 +167,18 @@ export const updateProductDB = async (id, updatedFields) => {
   }
 
   const existing = getLS("td_admin_products", INITIAL_PRODUCTS);
-  const updated = existing.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
+  const updated = existing.map((p) => {
+    if (p.id === id) {
+      const merged = { ...p, ...updatedFields };
+      if (updatedFields.imagesCadre || updatedFields.imagesPanneau) {
+        merged.images = (updatedFields.images && updatedFields.images.length > 0)
+          ? updatedFields.images
+          : [...(merged.imagesCadre || []), ...(merged.imagesPanneau || [])];
+      }
+      return merged;
+    }
+    return p;
+  });
   setLS("td_admin_products", updated);
   return updated;
 };
@@ -204,7 +244,12 @@ export const getOrders = async () => {
     }
   }
 
-  return getLS("td_admin_orders", INITIAL_ORDERS);
+  const storedOrders = getLS("td_admin_orders", null);
+  if (!storedOrders || storedOrders.length === 0) {
+    setLS("td_admin_orders", INITIAL_ORDERS);
+    return INITIAL_ORDERS;
+  }
+  return storedOrders;
 };
 
 export const updateOrderStatusDB = async (orderId, newStatus) => {

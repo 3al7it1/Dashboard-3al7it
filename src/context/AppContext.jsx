@@ -327,14 +327,15 @@ export const AppProvider = ({ children }) => {
     setOrders(SAMPLE_DEMO_ORDERS);
     setProducts(SAMPLE_DEMO_PRODUCTS);
     setCategories(CATEGORIES_TREE);
-    setAdSpend({ facebook: 1100, instagram: 650, tiktok: 450, google: 200, cogsPercentage: 35 });
+    const demoSpend = { facebook: 1200, instagram: 700, tiktok: 500, google: 0, cogsPercentage: 35 };
+    setAdSpend(demoSpend);
     setCmsConfig(INITIAL_CMS_CONFIG);
 
     localStorage.setItem("td_admin_products", JSON.stringify(SAMPLE_DEMO_PRODUCTS));
     localStorage.setItem("td_admin_orders", JSON.stringify(SAMPLE_DEMO_ORDERS));
-    localStorage.setItem("td_admin_adspend", JSON.stringify({ facebook: 1100, instagram: 650, tiktok: 450, google: 200, cogsPercentage: 35 }));
+    localStorage.setItem("td_admin_adspend", JSON.stringify(demoSpend));
 
-    addToast(lang === "fr" ? "Données de démonstration réinjectées !" : "Demo data re-injected!", "system", "info");
+    addToast(lang === "fr" ? "Données de démonstration réinjectées (20+ produits, 16 commandes, 2 400 DNT pub) !" : "Demo data re-injected (20+ products, 16 orders, 2,400 DNT ad spend)!", "system", "info");
   };
 
   // PURGE DATA CLEAN SLATE FOR OFFICIAL PRODUCTION LAUNCH

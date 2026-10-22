@@ -326,17 +326,28 @@ export const OrdersTab = ({ globalSearchQuery }) => {
                         )}
 
                         <div className="space-y-1 min-w-0">
-                          {ord.items && ord.items.map((item, idx) => (
-                            <div key={idx} className="flex items-center gap-2">
-                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30 shrink-0">
-                                {item.dimension || "A3"}
-                              </span>
-                              <span className="truncate max-w-[170px] text-slate-200">
-                                {item.title}
-                              </span>
-                              <span className="text-slate-500 shrink-0">x{item.quantity || 1}</span>
-                            </div>
-                          ))}
+                          {ord.items && ord.items.map((item, idx) => {
+                            const isFramed = isItemFramed(item, ord);
+                            const finishLabel = item.finish || (isFramed ? "Avec Cadre" : "Panneau Simple");
+                            return (
+                              <div key={idx} className="flex items-center gap-1.5 flex-wrap">
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
+                                  {item.dimension || "A3"}
+                                </span>
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold border shrink-0 ${
+                                  isFramed
+                                    ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                                    : "bg-cyan-500/10 text-cyan-300 border-cyan-500/30"
+                                }`}>
+                                  {finishLabel}
+                                </span>
+                                <span className="truncate max-w-[130px] text-slate-200">
+                                  {item.title}
+                                </span>
+                                <span className="text-slate-500 shrink-0">x{item.quantity || 1}</span>
+                              </div>
+                            );
+                          })}
                           {imageUrl && (
                             <button
                               onClick={() => handleOpenLightbox(ord)}
@@ -651,29 +662,67 @@ export const OrdersTab = ({ globalSearchQuery }) => {
 
                   {/* Ordered Items List */}
                   <div className="space-y-3">
-                    <h4 className="font-bold text-xs text-slate-400 uppercase tracking-wider">
-                      Tableaux & Panneaux Commandés ({selectedOrder.items.length})
+                    <h4 className="font-bold text-xs text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                      <span>Tableaux & Panneaux Commandés ({selectedOrder.items?.length || 0})</span>
+                      <span className="text-[10px] text-amber-400 font-mono font-bold">Finition & Dimensions</span>
                     </h4>
-                    <div className="space-y-2">
-                      {selectedOrder.items.map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between text-xs"
-                        >
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                                Format {item.dimension || "A3"} ({item.dimensionDetails || item.dimension})
-                              </span>
-                              <span className="text-[10px] text-slate-400">x{item.quantity || 1}</span>
+                    <div className="space-y-2.5">
+                      {selectedOrder.items && selectedOrder.items.map((item, idx) => {
+                        const itemImg = item.image || item.assetUrl || resolveOrderImageUrl(selectedOrder);
+                        const isFramed = isItemFramed(item, selectedOrder);
+                        const finishText = item.finish || (isFramed ? "Avec Cadre" : "Panneau Simple");
+
+                        return (
+                          <div
+                            key={idx}
+                            className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-3 text-xs"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              {itemImg ? (
+                                <img
+                                  src={itemImg}
+                                  alt={item.title}
+                                  className="w-12 h-16 object-cover rounded-lg border border-slate-700 shrink-0 bg-slate-950 shadow"
+                                />
+                              ) : (
+                                <div className="w-12 h-16 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center shrink-0 text-slate-600">
+                                  <Layers className="w-5 h-5" />
+                                </div>
+                              )}
+                              <div className="space-y-1 min-w-0">
+                                <p className="font-bold text-white text-xs truncate max-w-xs">{item.title}</p>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {/* Finish badge */}
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 ${
+                                    isFramed
+                                      ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                                      : "bg-cyan-500/10 text-cyan-300 border-cyan-500/30"
+                                  }`}>
+                                    {isFramed ? <Frame className="w-2.5 h-2.5" /> : <Layers className="w-2.5 h-2.5" />}
+                                    {finishText}
+                                  </span>
+
+                                  {/* Dimension badge */}
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-slate-800 text-slate-300 border border-slate-700">
+                                    Format {item.dimension || "A3"} ({item.dimensionDetails || item.dimension || "Standard"})
+                                  </span>
+                                  <span className="text-[11px] text-slate-400 font-semibold">x{item.quantity || 1}</span>
+                                </div>
+                              </div>
                             </div>
-                            <p className="font-semibold text-white">{item.title}</p>
+                            <div className="text-right shrink-0">
+                              <span className="font-mono font-extrabold text-sm text-amber-400">
+                                {item.subtotal || (item.unitPrice ? item.unitPrice * (item.quantity || 1) : 0)} DNT
+                              </span>
+                              {item.unitPrice && (
+                                <p className="text-[10px] text-slate-500 font-mono">
+                                  {item.unitPrice} DNT / u
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <span className="font-mono font-bold text-amber-400">
-                            {item.subtotal || item.unitPrice} DNT
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -784,6 +833,7 @@ export const OrdersTab = ({ globalSearchQuery }) => {
                 <thead>
                   <tr className="border-b-2 border-slate-900 text-slate-900 uppercase font-bold text-[10px]">
                     <th className="py-2">Description du Produit</th>
+                    <th className="py-2 text-center">Finition</th>
                     <th className="py-2 text-center">Format</th>
                     <th className="py-2 text-center">Qté</th>
                     <th className="py-2 text-right">Prix Unitaire</th>
@@ -791,19 +841,30 @@ export const OrdersTab = ({ globalSearchQuery }) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {invoiceOrder.items && invoiceOrder.items.map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="py-3 font-semibold text-slate-800">{item.title}</td>
-                      <td className="py-3 text-center">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-800">
-                          {item.dimension || "A3"}
-                        </span>
-                      </td>
-                      <td className="py-3 text-center">{item.quantity || 1}</td>
-                      <td className="py-3 text-right font-mono">{item.unitPrice || 0} DNT</td>
-                      <td className="py-3 text-right font-mono font-bold">{item.subtotal || item.unitPrice || 0} DNT</td>
-                    </tr>
-                  ))}
+                  {invoiceOrder.items && invoiceOrder.items.map((item, idx) => {
+                    const isFramed = isItemFramed(item, invoiceOrder);
+                    const finishText = item.finish || (isFramed ? "Avec Cadre" : "Panneau Simple");
+                    return (
+                      <tr key={idx}>
+                        <td className="py-3 font-semibold text-slate-800">{item.title}</td>
+                        <td className="py-3 text-center">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            isFramed ? "bg-amber-100 text-amber-900" : "bg-cyan-100 text-cyan-900"
+                          }`}>
+                            {finishText}
+                          </span>
+                        </td>
+                        <td className="py-3 text-center">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 font-mono font-bold text-slate-800">
+                            {item.dimension || "A3"}
+                          </span>
+                        </td>
+                        <td className="py-3 text-center">{item.quantity || 1}</td>
+                        <td className="py-3 text-right font-mono">{item.unitPrice || 0} DNT</td>
+                        <td className="py-3 text-right font-mono font-bold">{item.subtotal || item.unitPrice || 0} DNT</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
 
